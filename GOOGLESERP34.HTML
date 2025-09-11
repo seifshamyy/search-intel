@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SERP Matrix – Project ⇨ Type ⇨ Keyword Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Light theme + red accents */
+    --bg:#ffffff;
+    --panel:#f8fafc;
+    --panel-2:#f1f5f9;
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --accent:#ef4444;
+    --accent-2:#dc2626;
+    --accent-3:#991b1b;
+    --chip:#f1f5f9;
+    --ring: 0 0 0 2px rgba(239,68,68,.18), 0 6px 18px rgba(239,68,68,.10), inset 0 0 12px rgba(239,68,68,.05);
+    --ok:#10b981;
+    --warn:#f59e0b;
+    --bad:#ef4444;
+
+    --border:#e5e7eb;
+    --bar-bg:#f8fafc;
+    --subtle:#f9fafb;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(1100px 500px at 10% -10%, rgba(239,68,68,.06), transparent 50%),
+      radial-gradient(700px 400px at 100% 0%, rgba(16,185,129,.06), transparent 40%),
+      var(--bg);
+    color:var(--ink);
+  }
+  .wrap{max-width:1200px; margin:32px auto; padding:0 16px}
+  .hdr{display:flex; align-items:center; gap:16px; margin-bottom:18px}
+  .logo{width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,var(--accent),#f97316); box-shadow:var(--ring); display:grid; place-items:center; font-weight:800; color:#fff}
+  .title h1{margin:0; font-size:24px; letter-spacing:.2px}
+  .title p{margin:2px 0 0; color:var(--muted); font-size:13px}
+  .controls{display:flex; flex-wrap:wrap; gap:10px; margin:18px 0 28px}
+  .btn{appearance:none; border:0; outline:0; border-radius:14px; padding:9px 14px; font-weight:600; letter-spacing:.2px; cursor:pointer; transition:transform .06s ease, opacity .2s ease; user-select:none;}
+  .btn.primary{background:linear-gradient(180deg, var(--accent), var(--accent-2)); color:white; box-shadow:var(--ring)}
+  .btn.ghost{background:var(--chip); color:var(--ink); border:1px solid var(--border)}
+  .btn:active{transform:translateY(1px)}
+  .search{flex:1 1 320px; display:flex; background:var(--panel); border-radius:14px; padding:8px 12px; align-items:center; gap:8px; border:1px solid var(--border)}
+  .search input{flex:1; background:transparent; border:0; outline:0; color:var(--ink); font-size:14px}
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.65)); border:1px solid var(--border); border-radius:20px; padding:16px; box-shadow: 0 8px 24px rgba(15,23,42,.06)}
+  .panel + .panel{margin-top:18px}
+  .rank-bars{display:grid; gap:10px}
+  .bar{background:var(--bar-bg); border:1px solid var(--border); border-radius:12px; overflow:hidden}
+  .bar > .fill{height:34px; display:flex; align-items:center; padding:0 12px; font-weight:700; letter-spacing:.2px; white-space:nowrap; color:#fff}
+  .bar > .meta{display:flex; justify-content:space-between; padding:6px 8px 10px; color:var(--muted); font-size:12px}
+  .pill{display:inline-flex; align-items:center; gap:8px; background:var(--chip); color:var(--ink); border-radius:999px; padding:6px 10px; font-weight:700; letter-spacing:.2px; border:1px solid var(--border)}
+  .pill .rankdot{display:inline-grid; place-items:center; width:22px; height:22px; border-radius:12px; background:linear-gradient(180deg,var(--accent),var(--accent-2)); box-shadow:var(--ring); color:#fff}
+  .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:14px}
+  .grid .col-12{grid-column:span 12}
+  .grid .col-6{grid-column:span 6}
+  @media (max-width: 1000px){ .grid .col-6{grid-column:span 12} }
+  .card{background:var(--card); border:1px solid var(--border); border-radius:18px; padding:14px; box-shadow: 0 8px 24px rgba(15,23,42,.06)}
+  .card + .card{margin-top:12px}
+  .card h3{margin:0; font-size:18px}
+  .muted{color:var(--muted)}
+  .flex{display:flex; gap:10px; align-items:center}
+  .stack{display:flex; flex-direction:column; gap:8px}
+  .divider{height:1px; background:var(--border); margin:10px 0}
+  .project{position:relative}
+  .project .head{display:flex; justify-content:space-between; gap:10px; align-items:flex-start}
+  .project .head .left{display:flex; align-items:center; gap:12px}
+  .project .head .meta{display:flex; gap:10px; flex-wrap:wrap}
+  .block-title{display:flex; align-items:center; justify-content:space-between}
+  .section-title{font-size:14px; color:var(--muted); margin:0 0 8px}
+  .badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:12px; background:var(--subtle); border:1px solid var(--border); color:var(--muted); font-size:12px; font-weight:700}
+  .badge .dot{width:8px; height:8px; border-radius:50%; background:var(--accent)}
+  .collapse{border:1px solid var(--border); border-radius:14px; overflow:hidden}
+  .collapse .c-head{display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--panel); cursor:pointer}
+  .collapse .c-body{display:none; padding:12px 14px; background:#fff}
+  .collapse.open .c-body{display:block}
+  .arrow{transition:transform .2s ease}
+  .collapse.open .arrow{transform:rotate(180deg)}
+  .kw-row{display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border:1px solid var(--border); border-radius:12px; background:var(--subtle)}
+  .kw-row + .kw-row{margin-top:8px}
+  .kw-tag{display:inline-flex; gap:6px; align-items:center; font-weight:700}
+  .footer{margin:26px 0 16px; color:var(--muted); font-size:12px; text-align:center}
+  .sticky-top{position:sticky; top:0; z-index:40; padding:10px 0 14px; backdrop-filter:saturate(140%) blur(8px); background:linear-gradient(180deg, rgba(255,255,255,.85), rgba(255,255,255,.65))}
+  .toast{position:fixed; right:16px; bottom:16px; background:#111827; border:1px solid #0b1220; border-radius:12px; padding:10px 14px; color:#e5e7eb; box-shadow: 0 8px 24px rgba(0,0,0,.25); display:none}
+  .toast.show{display:block}
+
+  /* FINAL COLOR MAP */
+  .pf{background:linear-gradient(90deg, #ef4444, #dc2626);}              /* PF = RED */
+  .dubizzle{background:linear-gradient(90deg, #fb923c, #f97316);}        /* Dubizzle = ORANGE */
+  .bayut{background:linear-gradient(90deg, #10b981, #34d399);}           /* Bayut = GREEN */
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hdr sticky-top">
+      <div class="logo">Σ</div>
+      <div class="title">
+        <h1>SERP Matrix Report Viewer</h1>
+        <p>User flow: Project ranking → pick a project → Keyword Types → each Type’s Top Platform → Keywords.</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="search" title="Filter projects by name">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-3.8-3.8" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/><circle cx="11" cy="11" r="7" stroke="#94a3b8" stroke-width="2" fill="none"/></svg>
+        <input id="search" placeholder="Search projects…" />
+      </div>
+      <button class="btn primary" id="btnFetch">Fetch Current Data</button>
+      <button class="btn ghost" id="btnReset">Reset to embedded</button>
+    </div>
+
+    <div class="panel" id="overview">
+      <div class="block-title">
+        <h2 style="margin:0;font-size:18px">Project Ranking (All Platforms & Keywords)</h2>
+        <span class="badge"><span class="dot"></span> Interactive • Click to jump</span>
+      </div>
+      <div id="rankBars" class="rank-bars"></div>
+    </div>
+
+    <div id="projects" class="grid" style="margin-top:18px"></div>
+
+    <div class="footer">Built for human decision-making. No tables. All hierarchy preserved.</div>
+  </div>
+
+  <script id="data" type="application/json">
+  [
+    {"result": {"project_ranking": [], "projects": []}}
+  ]
+  </script>
+
+<script>
+(function(){
+  const el = sel => document.querySelector(sel);
+  const format = n => (typeof n === 'number') ? n.toLocaleString() : n;
+  const by = (k, dir='asc') => (a,b)=> (a[k]===b[k]?0:(dir==='asc'?(a[k]>b[k]?1:-1):(a[k]<b[k]?1:-1)));
+  const platformClass = (name) => {
+    name = (name||'').toUpperCase();
+    if (name.includes('PF')) return 'pf';
+    if (name.includes('DUBIZZLE')) return 'dubizzle';
+    if (name.includes('BAYUT')) return 'bayut';
+    return '';
+  };
+
+  let state = { projects: [], project_ranking: [] };
+  let embedded = null;
+
+  function tryParseJSON(text){ try{ return JSON.parse(text); }catch(e){ return null; } }
+  function coerceToResult(data){
+    if (!data) return { projects: [], project_ranking: [] };
+    if (Array.isArray(data)){
+      if (data.length && data[0].result) return data[0].result;
+      if (data.length && data[0].projects) return data[0];
+    }
+    if (data.result) return data.result;
+    if (data.projects) return data;
+    return { projects: [], project_ranking: [] };
+  }
+  function loadEmbedded(){
+    const raw = (el('#data')?.textContent||'').trim();
+    const obj = tryParseJSON(raw);
+    embedded = coerceToResult(obj);
+    setState(embedded);
+  }
+  function setState(next){
+    state = { projects: next.projects||[], project_ranking: next.project_ranking||[] };
+    renderOverview();
+    renderProjects();
+  }
+  function renderOverview(){
+    const root = el('#rankBars');
+    root.innerHTML = '';
+    const items = (state.project_ranking||[]).slice().sort(by('rank','asc'));
+    if (!items.length){ root.innerHTML = `<div class="muted">No ranking found. Click “Fetch Current Data”.</div>`; return; }
+    const max = Math.max(...items.map(i=>i.total_score||0), 1);
+    items.forEach(item=>{
+      const pct = Math.max(2, Math.round(((item.total_score||0)/max)*100));
+      const id = `project-${item.project}`;
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.innerHTML = `
+        <div class="fill pf" style="width:${pct}%">
+          <span class="pill"><span class="rankdot">${item.rank}</span> ${item.project}</span>
+        </div>
+        <div class="meta">
+          <div>Total score <b>${format(item.total_score)}</b></div>
+          <a href="#${id}" style="color:var(--accent-3); text-decoration:none; font-weight:700">View details →</a>
+        </div>`;
+      bar.addEventListener('click', ()=>{ location.hash = id; });
+      root.appendChild(bar);
+    });
+  }
+  function renderProjects(){
+    const wrap = el('#projects');
+    wrap.innerHTML = '';
+    const projects = (state.projects||[]).slice().sort((a,b)=> (a.rank||999)-(b.rank||999));
+    const search = (el('#search')?.value||'').trim().toLowerCase();
+    projects
+      .filter(p => !search || (p.project||'').toLowerCase().includes(search))
+      .forEach(p => wrap.appendChild(projectCard(p)));
+  }
+  function projectCard(p){
+    const card = document.createElement('div');
+    card.className = 'col-12';
+    const id = `project-${p.project}`;
+    const plat = (p.platform_ranking||[]).slice().sort(by('rank','asc'));
+    const platSum = plat.reduce((a,c)=>a+(c.total_score||0),0) || 1;
+    const kt = (p.keyword_types||[]).slice().sort(by('rank','asc'));
+    const topKT = kt[0];
+    const platformBars = plat.map(pl=>{
+      const w = Math.max(3, Math.round(((pl.total_score||0)/platSum)*100));
+      return `<div class="bar"><div class="fill ${platformClass(pl.platform)}" style="width:${w}%">${pl.platform}</div><div class="meta"><div>Share <b>${w}%</b></div><div>Score <b>${format(pl.total_score)}</b></div></div></div>`;
+    }).join('');
+    const ktNodes = kt.map(typeNode).join('');
+    card.innerHTML = `<section class="project card" id="${id}">
+      <div class="head">
+        <div class="left">
+          <span class="pill"><span class="rankdot">${p.rank||'–'}</span> ${p.project}</span>
+          <span class="badge"><span class="dot"></span> Total <b style="color:#111; margin-left:6px">${format(p.total_score)}</b></span>
+        </div>
+        <div class="meta">
+          ${ topKT ? `<span class="badge"><span class="dot"></span> Top keyword type: <b style="color:#111; margin-left:6px">${topKT.keyword_type}</b></span>` : '' }
+          <a class="btn ghost" href="#overview">Back to ranking</a>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="grid">
+        <div class="col-6">
+          <h3>Platform performance</h3>
+          <div class="stack">${platformBars}</div>
+        </div>
+        <div class="col-12">
+          <h3 style="margin:14px 0 8px">Keyword types (ranked)</h3>
+          <div class="stack">${ktNodes}</div>
+        </div>
+      </div>
+    </section>`;
+    return card;
+  }
+  function typeNode(t){
+    const plat = (t.platform_ranking||[]).slice().sort(by('rank','asc'));
+    const sum = plat.reduce((a,c)=>a+(c.total_score||0),0)||1;
+    const platBars = plat.map(pl=>{
+      const w = Math.max(3, Math.round(((pl.total_score||0)/sum)*100));
+      return `<div class="bar"><div class="fill ${platformClass(pl.platform)}" style="width:${w}%">${pl.platform}</div><div class="meta"><div>Share <b>${w}%</b></div><div>Score <b>${format(pl.total_score)}</b></div></div></div>`;
+    }).join('');
+    const kws = (t.keywords||[]).slice().sort(by('rank','asc'));
+    const keywordRows = (arr)=> arr.map(k=> `
+      <div class="kw-row">
+        <div class="kw-tag">
+          <span class="pill">
+            <span class="rankdot">${k.rank}</span>
+            ${escapeHTML(k.keyword)}
+          </span>
+        </div>
+        <div class="muted">
+          Score: <b>${format(k.total_score)}</b>
+          ${k.top_platform ? ` • Winner: <b>${escapeHTML(k.top_platform)}</b> (${format(k.top_platform_score||0)})` : ''}
+        </div>
+      </div>`).join('');
+    return `
+      <div class="collapse card">
+        <div class="c-head">
+          <div class="flex">
+            <span class="pill"><span class="rankdot">${t.rank||'–'}</span> ${t.keyword_type}</span>
+            ${ t.top_platform ? `<span class="badge"><span class="dot"></span> Top platform: <b style="color:#111; margin-left:6px">${t.top_platform}</b></span>` : '' }
+            <span class="badge"><span class="dot"></span> Total <b style="color:#111; margin-left:6px">${format(t.total_score)}</b></span>
+          </div>
+          <svg class="arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="c-body">
+          <div class="section-title">Platform ranking for this keyword type</div>
+          <div class="stack">${platBars}</div>
+          <div class="divider"></div>
+          <div class="section-title">Keywords (ranked)</div>
+          <div class="stack" data-keywords>${keywordRows(kws)}</div>
+        </div>
+      </div>`;
+  }
+  function escapeHTML(s){
+    return String(s||'').replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#039;'
+    })[c]);
+  }
+
+  // Event delegation so dropdowns work after re-render/fetch
+  document.addEventListener('click', (e)=>{
+    const head = e.target.closest('.c-head');
+    if (head){ head.parentElement.classList.toggle('open'); }
+  });
+
+  // Search live filter
+  el('#search').addEventListener('input', ()=> renderProjects());
+
+  // Fetch current data (GET, then POST fallback)
+  el('#btnFetch').addEventListener('click', async ()=>{
+    const btn = el('#btnFetch');
+    const urlBase = 'https://primary-production-9e01d.up.railway.app/webhook/615eb5b3-274f-4e33-93a7-95b3fe5375a7';
+    const url = urlBase + (urlBase.includes('?') ? '&' : '?') + 't=' + Date.now();
+    const original = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Fetching…';
+    try{
+      let res = await fetch(url, { method:'GET', mode:'cors', credentials:'omit', headers:{ 'Accept':'application/json' } });
+      let text = await res.text();
+      let data = null;
+      try { data = JSON.parse(text); } catch(_) {}
+      if(!res.ok || !data){
+        res = await fetch(urlBase, {
+          method:'POST', mode:'cors', credentials:'omit',
+          headers:{ 'Accept':'application/json','Content-Type':'application/json' },
+          body: '{}'
+        });
+        text = await res.text();
+        try { data = JSON.parse(text); } catch(e){ throw new Error(`Bad response. Status ${res.status}. Body: ${text?.slice(0,200)||''}`); }
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      }
+      setState(coerceToResult(data));
+      showToast('Live data loaded');
+    }catch(err){
+      console.error(err);
+      showToast('Fetch failed: ' + (err?.message || 'Unknown error'));
+      alert('Failed to fetch current data. Check that the webhook allows CORS and returns JSON.\n\nError: ' + (err?.message||err));
+    } finally {
+      btn.disabled = false; btn.textContent = original;
+    }
+  });
+
+  el('#btnReset').addEventListener('click', ()=>{ if (!embedded) return loadEmbedded(); setState(embedded); });
+
+  function showToast(msg, ms=2500){
+    const t = document.querySelector('.toast');
+    if(!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), ms);
+  }
+
+  // Kickoff
+  loadEmbedded();
+
+  // Optional: allow programmatic updates
+  window.addEventListener('serp:data', e => { if (e?.detail) setState(coerceToResult(e.detail)); });
+
+})();
+</script>
+<div class="toast">Loaded.</div>
+</body>
+</html>
