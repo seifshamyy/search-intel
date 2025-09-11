@@ -1,6 +1,6 @@
 {
   "name": "search-intel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Static server for the SERP Matrix dashboard with IP allow-list and daily password sender",
   "main": "server.js",
   "scripts": {
@@ -8,7 +8,6 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
-    "cidr-matcher": "2.1.4",
     "compression": "^1.7.4",
     "express": "^4.19.2",
     "helmet": "^7.1.0",
