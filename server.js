@@ -1,54 +1,71 @@
-/* Simple static server for the SERP Matrix dashboard */
+/* server.js — static server with CSP that allows direct fetch to your webhook */
 const path = require('path');
 const express = require('express');
 const compression = require('compression');
-const helmet = require('helmet');
 const morgan = require('morgan');
+const helmet = require('helmet');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Trust Railway/Proxy
+/*
+  Set this to the exact origin of your webhook so CSP allows it.
+  Example (yours): https://primary-production-9e01d.up.railway.app
+  You can comma-separate multiple origins via CONNECT_SRC.
+*/
+const CONNECT_SRC = (process.env.CONNECT_SRC || 'https://primary-production-9e01d.up.railway.app')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+// Basic hardening; CSP permits inline script/style for your current HTML.
 app.set('trust proxy', 1);
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "script-src": ["'self'", "'unsafe-inline'", "https:"],
+        "style-src": ["'self'", "'unsafe-inline'", "https:"],
+        "img-src": ["'self'", "data:", "https:"],
+        "connect-src": ["'self'", ...CONNECT_SRC], // <- allow direct fetch to webhook
+        "frame-ancestors": ["'none'"],
+        "object-src": ["'none'"],
+        "base-uri": ["'self'"]
+      }
+    },
+    referrerPolicy: { policy: 'no-referrer' },
+    crossOriginEmbedderPolicy: false
+  })
+);
 
-// Security headers (CSP is OFF by default so inline CSS/JS works)
-app.use(helmet());
-
-// Gzip/Brotli (Brotli is handled by platform; gzip here)
 app.use(compression());
-
-// Logging
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'tiny' : 'dev'));
-
-// Parse JSON just in case you later add small endpoints
 app.use(express.json({ limit: '1mb' }));
 
-// Static assets
-const publicDir = path.join(__dirname, 'public');
+// Static hosting
+const STATIC_DIR = path.join(__dirname, 'public');
 const staticOpts = {
   etag: true,
   lastModified: true,
   maxAge: '1h',
   setHeaders: (res, filePath) => {
-    // Always serve index.html fresh to avoid stale embedded JSON
     if (filePath.endsWith('index.html')) {
-      res.setHeader('Cache-Control', 'no-store');
+      res.setHeader('Cache-Control', 'no-store'); // always fresh
     }
   }
 };
+app.use(express.static(STATIC_DIR, staticOpts));
 
-app.use(express.static(publicDir, staticOpts));
+// Health
+app.get(['/health', '/healthz', '/_health'], (_req, res) => res.json({ ok: true }));
 
-// Health check
-app.get(['/health', '/healthz', '/_health'], (_req, res) =>
-  res.status(200).json({ ok: true })
-);
-
-// Fallback to index (not strictly needed, but handy)
-app.get('*', (_req, res) => {
-  res.sendFile(path.join(publicDir, 'index.html'));
-});
+// SPA fallback
+app.get('*', (_req, res) => res.sendFile(path.join(STATIC_DIR, 'index.html')));
 
 app.listen(PORT, () => {
-  console.log(`SERP Report Viewer running on http://0.0.0.0:${PORT}`);
+  console.log(`Static app running on http://0.0.0.0:${PORT}`);
+  console.log(`CSP connect-src allows: ${CONNECT_SRC.join(', ')}`);
 });
+
