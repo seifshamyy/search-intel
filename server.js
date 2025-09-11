@@ -1,5 +1,5 @@
 /* server.js — static server with CSP that allows direct fetch to your webhook,
-   wired with the security middleware above (IP allow-list + daily password + 9am notifier).
+   wired with the security middleware (IP allow-list + daily password + 9am notifier).
 */
 const path = require('path');
 const express = require('express');
@@ -12,13 +12,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Allow direct outbound fetch from the browser to your data webhook (for the dashboard button).
-// Add more origins by setting CONNECT_SRC env to a comma-separated list.
 const CONNECT_SRC = (process.env.CONNECT_SRC || 'https://primary-production-9e01d.up.railway.app')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
 
-// Apply security: IP allow-list + Basic Auth + daily notifier (no HTML changes).
+// Apply security first
 secure(app);
 
 // Standard hardening; CSP permits inline script/style in your current HTML.
@@ -55,7 +54,7 @@ app.use(
     maxAge: '1h',
     setHeaders: (res, filePath) => {
       if (filePath.endsWith('index.html')) {
-        res.setHeader('Cache-Control', 'no-store'); // serve fresh dashboard HTML
+        res.setHeader('Cache-Control', 'no-store');
       }
     }
   })
