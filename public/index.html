@@ -135,7 +135,18 @@
     {"result": {"project_ranking": [], "projects": []}}
   ]
   </script>
-
+<script>
+  // Try hard to trigger a 401 challenge when the tab is going away
+  function nukeAuth() {
+    // fire-and-forget request that returns 401 with a different realm
+    fetch('/logout', { method: 'GET', keepalive: true, cache: 'no-store', credentials: 'include' }).catch(()=>{});
+  }
+  window.addEventListener('pagehide', nukeAuth);       // Safari/iOS
+  window.addEventListener('beforeunload', nukeAuth);   // Most browsers
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') nukeAuth();
+  });
+</script>
 <script>
 (function(){
   const el = sel => document.querySelector(sel);
@@ -353,4 +364,5 @@
 <div class="toast">Loaded.</div>
 </body>
 </html>
+
 
