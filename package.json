@@ -1,11 +1,12 @@
 {
   "name": "search-intel",
-  "version": "1.0.1",
-  "description": "Static server for the SERP Matrix dashboard with IP allow-list and daily password sender",
+  "version": "1.0.2",
+  "description": "Static server for the SERP Matrix dashboard (security bypass option included for dev)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "start:noauth": "AUTH_DISABLED=1 node server.js"
   },
   "dependencies": {
     "compression": "^1.7.4",
@@ -23,3 +24,4 @@
   },
   "license": "MIT"
 }
+
